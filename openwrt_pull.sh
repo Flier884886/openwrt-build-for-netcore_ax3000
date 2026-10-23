@@ -124,6 +124,16 @@ CONFIG_PACKAGE_kmod-loop=y
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
 
+# ===== Web 管理界面核心 =====
+CONFIG_PACKAGE_uhttpd=y
+CONFIG_PACKAGE_uhttpd-mod-ubus=y
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-mod-admin-full=y
+CONFIG_PACKAGE_luci-mod-network=y
+CONFIG_PACKAGE_luci-mod-status=y
+CONFIG_PACKAGE_luci-mod-system=y
+CONFIG_PACKAGE_luci-app-firewall=y
+
 # ===== nftables 队列（UA3F 依赖）=====
 CONFIG_PACKAGE_kmod-nft-queue=y
 
