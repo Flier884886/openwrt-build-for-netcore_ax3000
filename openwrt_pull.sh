@@ -43,6 +43,8 @@ echo "克隆argon主题"
 git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
 echo "克隆openclash"
 git clone --depth=1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+echo "克隆ipid内核模块"
+git clone https://github.com/CHN-beta/rkp-ipid.git package/rkp-ipid
 
 echo "克隆官方feed包列表"
 # 官方 feed 中的包，通过 feeds 安装
