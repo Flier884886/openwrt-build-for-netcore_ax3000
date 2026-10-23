@@ -45,6 +45,8 @@ echo "克隆openclash"
 git clone --depth=1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash
 echo "克隆ipid内核模块"
 git clone https://github.com/CHN-beta/rkp-ipid.git package/rkp-ipid
+# 修补ipid的编译错误
+sed -i 's/unsigned int hook_funcion/static unsigned int hook_funcion/' $(find /run/media/masterchen/openwrt_build/openwrt -name "rkp-ipid.c" 2>/dev/null | head -1)
 
 echo "克隆官方feed包列表"
 # 官方 feed 中的包，通过 feeds 安装
