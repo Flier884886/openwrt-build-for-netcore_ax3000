@@ -9,6 +9,14 @@ echo "创建自己的工作分支"
 # 创建自己的工作分支
 git switch -c netcore-n30pro
 
+# 动态获取当前检出的稳定版 tag（去掉前缀 v）
+STABLE_VER=$(git describe --tags --abbrev=0 | sed 's/^v//')
+if [ -z "$STABLE_VER" ]; then
+    echo "错误: 无法获取稳定版 tag" >&2
+    exit 1
+fi
+echo "当前稳定版: $STABLE_VER"
+
 # 记录克隆时间和版本信息
 {
   echo "clone_time=$(date '+%Y-%m-%d %H:%M:%S %z')"
@@ -85,6 +93,10 @@ CONFIG_TARGET_PROFILE="DEVICE_netcore_n30pro"
 CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
 CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mcpu=cortex-a53"
 CONFIG_CPU_TYPE="cortex-a53"
+
+# 仓库路径
+CONFIG_VERSION_NUMBER="$STABLE_VER"
+CONFIG_VERSION_REPO="https://downloads.openwrt.org/releases/$STABLE_VER"
 
 # ===== 核心插件 =====
 CONFIG_PACKAGE_luci-app-openclash=y
