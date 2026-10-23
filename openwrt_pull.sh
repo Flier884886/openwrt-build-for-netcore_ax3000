@@ -95,6 +95,7 @@ CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mcpu=cortex-a53"
 CONFIG_CPU_TYPE="cortex-a53"
 
 # 仓库路径
+CONFIG_VERSIONOPT=y
 CONFIG_VERSION_NUMBER="$STABLE_VER"
 CONFIG_VERSION_REPO="https://downloads.openwrt.org/releases/$STABLE_VER"
 
