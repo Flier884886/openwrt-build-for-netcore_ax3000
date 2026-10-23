@@ -134,8 +134,10 @@ CONFIG_PACKAGE_luci-mod-status=y
 CONFIG_PACKAGE_luci-mod-system=y
 CONFIG_PACKAGE_luci-app-firewall=y
 
-# ===== nftables 队列（UA3F 依赖）=====
+# ===== UA3F =====
+CONFIG_PACKAGE_ua3f=y
 CONFIG_PACKAGE_kmod-nft-queue=y
+CONFIG_PACKAGE_libubox-lua=y
 
 # ===== iptables 兼容层（25.12 使用 iptables-nft）=====
 CONFIG_PACKAGE_iptables-nft=y
