@@ -53,7 +53,7 @@ git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/luci/UA-Mask
 # make package/luci/UA-Mask/openwrt/package/compile V=0 \
 #   UAMASK_SOURCE_DIR=/run/media/masterchen/openwrt_build/openwrt/package/luci/UA-Mask \
 #   2>&1 | tee uamask_build.log
-sed -i 's/^UAMASK_SOURCE_DIR?=\$(REPO_ROOT)/UAMASK_SOURCE_DIR:=$(REPO_ROOT)/' package/luci/UA-Mask/openwrt/package/Makefile
+sed -i 's|^UAMASK_SOURCE_DIR:=.*|UAMASK_SOURCE_DIR:=$(TOPDIR)/package/luci/UA-Mask|' package/luci/UA-Mask/openwrt/package/Makefile
 
 echo "克隆官方feed包列表"
 # 官方 feed 中的包，通过 feeds 安装
