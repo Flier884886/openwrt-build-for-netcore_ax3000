@@ -47,6 +47,8 @@ echo "克隆ipid内核模块"
 git clone https://github.com/CHN-beta/rkp-ipid.git package/rkp-ipid
 # 修补ipid的编译错误
 sed -i 's/unsigned int hook_funcion/static unsigned int hook_funcion/' $(find /run/media/masterchen/openwrt_build/openwrt -name "rkp-ipid.c" 2>/dev/null | head -1)
+echo "克隆UA-Mask"
+git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/UA-Mask
 
 echo "克隆官方feed包列表"
 # 官方 feed 中的包，通过 feeds 安装
@@ -157,6 +159,9 @@ CONFIG_PACKAGE_ua3f=y
 CONFIG_PACKAGE_kmod-nft-queue=y
 CONFIG_PACKAGE_libubox-lua=y
 CONFIG_PACKAGE_kmod-rkp-ipid=y
+
+# ===== UA-Mask =====
+CONFIG_PACKAGE_UAmask=y
 
 # ===== iptables 兼容层（25.12 使用 iptables-nft）=====
 CONFIG_PACKAGE_iptables-nft=y
