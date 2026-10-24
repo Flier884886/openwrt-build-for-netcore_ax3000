@@ -48,7 +48,12 @@ git clone https://github.com/CHN-beta/rkp-ipid.git package/rkp-ipid
 # 修补ipid的编译错误
 sed -i 's/unsigned int hook_funcion/static unsigned int hook_funcion/' $(find /run/media/masterchen/openwrt_build/openwrt -name "rkp-ipid.c" 2>/dev/null | head -1)
 echo "克隆UA-Mask"
-git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/UA-Mask
+git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/luci/UA-Mask
+# echo "显示参数预编译UA-Mask"
+# make package/luci/UA-Mask/openwrt/package/compile V=0 \
+#   UAMASK_SOURCE_DIR=/run/media/masterchen/openwrt_build/openwrt/package/luci/UA-Mask \
+#   2>&1 | tee uamask_build.log
+sed -i 's/^UAMASK_SOURCE_DIR?=\$(REPO_ROOT)/UAMASK_SOURCE_DIR:=$(REPO_ROOT)/' package/luci/UA-Mask/openwrt/package/Makefile
 
 echo "克隆官方feed包列表"
 # 官方 feed 中的包，通过 feeds 安装
