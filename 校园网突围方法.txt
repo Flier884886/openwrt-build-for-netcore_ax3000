@@ -152,4 +152,13 @@ uci set network.wan.hostname='MasterChen'
 uci commit network
 /etc/init.d/network restart
 
+# 修改MAC
+uci set network.wan.macaddr='A0:36:BC:1F:4A:8B'
+uci commit network
+uci set wireless.radio1.macaddr='A0:36:BC:8F:2D:4C'
+uci set wireless.radio0.macaddr='D8:5D:4C:7A:3E:91'
+uci commit wireless
+wifi reload
+/etc/init.d/network restart
+
 echo "务必要前往管理界面的 系统>系统>通用设置 同步时间！！！"
