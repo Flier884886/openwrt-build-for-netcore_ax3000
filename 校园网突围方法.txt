@@ -143,6 +143,13 @@ iifname "br-lan" udp dport 53 counter redirect to :53
 iifname "br-lan" tcp dport 53 counter redirect to :53
 EOF
 fw4 reload
-
+# 修改主机名
+uci set system.@system[0].hostname='MasterChen'
+uci set network.wan.sendopts='0x3c:MSFT 5.0'
+uci commit system
+/etc/init.d/system reload
+uci set network.wan.hostname='MasterChen'
+uci commit network
+/etc/init.d/network restart
 
 echo "务必要前往管理界面的 系统>系统>通用设置 同步时间！！！"
