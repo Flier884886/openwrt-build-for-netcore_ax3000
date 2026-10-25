@@ -167,6 +167,11 @@ uci commit system
 uci set network.wan.hostname='MasterChen'
 uci commit network
 /etc/init.d/network restart
+uci set samba4.@samba[0].NAME='MasterChen'
+uci set samba4.@samba[0].DESCRIPTION='Windows File Sharing'
+uci set samba4.@samba[0].WORKGROUP='WORKGROUP'
+uci commit samba4
+/etc/init.d/samba4 restart 2>/dev/null || service samba4 restart 2>/dev/null
 
 # 修改MAC
 uci set network.wan.macaddr='A0:36:BC:1F:4A:8B'
