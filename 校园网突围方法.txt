@@ -190,27 +190,26 @@ cat /etc/apk/repositories.d/distfeeds.list
 # 刷新软件源索引
 apk update
 
+# 保护内网设备的信息与安全
+mkdir -p /usr/share/nftables.d/chain-pre/forward/
 cat << 'EOF' > /usr/share/nftables.d/chain-pre/forward/99-block-lan-discovery-leak.nft
-# 内网互通全放行，越界发现全封杀，保护内网设备的信息与安全
-# 1. 【全放行】只要是内网发往内网的流量，立刻放行（不管什么端口、什么协议）
-# 这样保障了局域网内部文件共享、游戏联机不会被误伤
+# 1. 内网互通全放行
 iifname "br-lan" oifname "br-lan" accept
-# 2. 【封组播】封杀试图离开内网的 IPv4 组播包 (224.0.0.0/4)
-# 包含 mDNS, SSDP, LLMNR 等所有设备发现协议
+# 2. 封杀试图离开内网的 IPv4 组播包
 iifname "br-lan" ip daddr 224.0.0.0/4 drop
-# 3. 【封广播】封杀试图离开内网的 IPv4 广播包
+# 3. 封杀试图离开内网的 IPv4 广播包
 iifname "br-lan" ip daddr 255.255.255.255 drop
-iifname "br-lan" ip daddr != 192.168.1.0/24 ip pkttype broadcast drop
-# 4. 【封v6组播】封杀试图离开内网的 IPv6 链路本地组播包
+iifname "br-lan" ip daddr != 192.168.1.0/24 meta pkttype broadcast drop
+# 4. 封杀试图离开内网的 IPv6 链路本地组播包
 iifname "br-lan" ip6 daddr ff02::/16 drop
-# 5. 【封NetBIOS】封杀试图离开内网的旧版 Windows 发现协议 (TCP/UDP 137-139)
-# 放行 445，保证大内网文件共享正常
+# 5. 封杀试图离开内网的 NetBIOS (TCP/UDP 137-139)
 iifname "br-lan" oifname != "br-lan" udp dport { 137, 138, 139 } drop
 iifname "br-lan" oifname != "br-lan" tcp dport { 137, 138, 139 } drop
-# 6. 【封UPnP】封杀试图去外网探测的单播 UPnP
+# 6. 封杀试图去外网探测的单播 UPnP
 iifname "br-lan" oifname != "br-lan" udp dport 1900 drop
 iifname "br-lan" oifname != "br-lan" tcp dport 2869 drop
 EOF
+# 3. 重载防火墙
 fw4 reload
 
 echo "务必要前往管理界面的 系统>系统>通用设置 同步时间！！！"
