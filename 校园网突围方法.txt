@@ -1,0 +1,148 @@
+注意：
+此方法仅在我编译或使用我脚本布置环境而编译的固件中可用。
+分为三个步骤：设置UA-MASK、添加启动脚本、连接并运行ssh命令。ssh连接工具可使用Tabby。
+本方法实现了：
+1.TTL强制设置为128
+2.UA强制修改为Chrome浏览器
+3.伪装ipid为递增
+4.强制重定向NTP服务器到路由器
+5.劫持DNS到路由器减少特征泄露，并对外加密DNS查询
+
+⚙️浏览器网页设置中：
+
+服务>UA MASK>
+
+常规设置>
+User-Agent标识修改为：Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36
+匹配规则：修改所有流量（强制）
+
+网络与防火墙>
+绕过目标IP：192.168.1.0/24
+
+保存并应用
+
+
+⚙️系统>启动项>启动脚本添加：
+
+# Put your custom commands here that should be executed once
+# the system init finished. By default this file does nothing.
+
+nft add table ip ipid_change
+nft add chain ip ipid_change postrouting { type filter hook postrouting priority 0\; policy accept\; }
+nft add rule ip ipid_change postrouting ip daddr 192.168.1.0/24 return
+nft add rule ip ipid_change postrouting meta mark set meta mark or 0x10
+
+exit 0
+
+
+⚙️首次启动后ssh运行：
+
+mkdir -p /usr/share/nftables.d/chain-post/mangle_postrouting/
+# 写入 TTL 伪装规则（文件内容只需写规则本身，无需 table/chain 声明）
+cat << 'EOF' > /usr/share/nftables.d/chain-post/mangle_postrouting/99-set-ttl.nft
+ip ttl set 128
+# 非 ICMPv6 的普通流量：设为 128
+ip6 nexthdr != icmpv6 ip6 hoplimit set 128
+# ICMPv6 中排除 NDP 类型（133-136）后，剩余流量设为 128
+ip6 nexthdr icmpv6 icmpv6 type != { nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } ip6 hoplimit set 128
+EOF
+# 重载防火墙，使规则自动合并生效
+fw4 reload
+
+# 关闭 Flow Offloading
+uci set firewall.@defaults[0].flow_offloading='0'
+uci set firewall.@defaults[0].flow_offloading_hw='0'
+uci commit firewall
+# 添加防火墙重定向规则（假设路由器 LAN IP 是 192.168.1.1）
+uci set system.ntp.enable_server='1'
+uci set system.ntp.interface='lan'
+uci -q delete system.ntp.server
+uci add_list system.ntp.server='ntp.ntsc.ac.cn'
+uci add_list system.ntp.server='ntp.tencent.com'
+uci add_list system.ntp.server='time1.cloud.tencent.com'
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='ntp1.nim.ac.cn'
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='pool.ntp.org'
+uci set system.@system[0].timezone='CST-8'
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci commit system
+/etc/init.d/sysntpd restart
+
+# 添加有状态 DNAT 重定向规则（ntp服务器）
+uci add firewall redirect
+uci set firewall.@redirect[-1].name='Force-NTP-to-Router'
+uci set firewall.@redirect[-1].src='lan'
+uci set firewall.@redirect[-1].src_dport='123'
+uci set firewall.@redirect[-1].proto='udp'
+uci set firewall.@redirect[-1].target='DNAT'
+uci set firewall.@redirect[-1].dest_ip='192.168.1.1'
+uci set firewall.@redirect[-1].dest_port='123'
+uci set firewall.@redirect[-1].family='ipv4'
+uci commit firewall
+/etc/init.d/firewall restart
+
+# dns劫持，降低被检测出异常dns流量特征的概率
+ # 把 https-dns-proxy 的 force_dns 关掉
+uci set https-dns-proxy.config.force_dns='0' 
+uci commit https-dns-proxy
+/etc/init.d/https-dns-proxy restart
+echo "=== 2. 清理旧的 DoH 实例并批量添加 6 个全新的加密 DNS ==="
+uci show https-dns-proxy | grep "@https-dns-proxy\[" | cut -d. -f2 | cut -d= -f1 | while read cfg; do
+    uci delete https-dns-proxy.$cfg 2>/dev/null
+done
+# 1. 阿里 DoH (国内主力)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://dns.alidns.com/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='223.5.5.5,223.6.6.6'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5053'
+# 2. 腾讯 DoH (国内主力)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://doh.pub/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='119.29.29.29,119.28.28.28'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5054'
+# 3. 360 安全 DoH (国内拦截恶意网站)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://doh.360.cn/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='101.226.4.6,218.30.118.6'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5055'
+# 4. 腾讯国密 DoH (极安全)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://sm2.doh.pub/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='119.29.29.29,119.28.28.28'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5056'
+# 5. Quad9 (国际防污染)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://dns.quad9.net/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='9.9.9.9,149.112.112.112'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5057'
+# 6. Cloudflare (国际隐私极速)
+uci add https-dns-proxy https-dns-proxy
+uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://cloudflare-dns.com/dns-query'
+uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='1.1.1.1,1.0.0.1'
+uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5058'
+
+uci commit https-dns-proxy
+/etc/init.d/https-dns-proxy restart
+
+echo "=== 3. 固定 dnsmasq 上游至这 6 个加密端口 ==="
+uci -q delete dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5053'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5054'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5055'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5056'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5057'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5058'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci commit dhcp
+
+/etc/init.d/dnsmasq restart #全局53端口劫持
+mkdir -p /usr/share/nftables.d/chain-pre/dstnat/
+cat << 'EOF' > /usr/share/nftables.d/chain-pre/dstnat/00-force-dns.nft
+iifname "br-lan" udp dport 53 counter redirect to :53
+iifname "br-lan" tcp dport 53 counter redirect to :53
+EOF
+fw4 reload
+
+
+echo "务必要前往管理界面的 系统>系统>通用设置 同步时间！！！"
