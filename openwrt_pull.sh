@@ -168,6 +168,10 @@ CONFIG_PACKAGE_kmod-rkp-ipid=y
 # ===== UA-Mask =====
 CONFIG_PACKAGE_UAmask=y
 
+# ===== dns-proxy =====
+CONFIG_PACKAGE_https-dns-proxy=y
+CONFIG_PACKAGE_luci-app-https-dns-proxy=y
+
 # ===== iptables 兼容层（25.12 使用 iptables-nft）=====
 CONFIG_PACKAGE_iptables-nft=y
 CONFIG_PACKAGE_kmod-ipt-core=y
