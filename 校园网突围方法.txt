@@ -37,6 +37,22 @@ exit 0
 
 ⚙️首次启动后ssh运行：
 
+# 备份网络和无线配置
+cp /etc/config/network /etc/config/network.bak_mac
+cp /etc/config/wireless /etc/config/wireless.bak_mac
+# 顺便把当前的规则也备份一下
+cp -r /usr/share/nftables.d /root/nftables.d.bak
+echo "=== 当前配置的 MAC 备份 ($(date)) ===" > /root/mac_backup.txt
+echo "--- 网络接口 (WAN) ---" >> /root/mac_backup.txt
+uci get network.wan.macaddr 2>/dev/null >> /root/mac_backup.txt || echo "未设置(使用默认)" >> /root/mac_backup.txt
+echo "--- 无线中继 (WWAN) ---" >> /root/mac_backup.txt
+# 查找所有绑定了客户端模式的接口
+for i in $(uci show wireless | grep "mode='sta'" | cut -d. -f2 | cut -d= -f1); do
+    echo "接口 $i: $(uci get wireless.$i.macaddr 2>/dev/null || echo '未设置')" >> /root/mac_backup.txt
+done
+# 显示备份内容
+cat /root/mac_backup.txt
+
 mkdir -p /usr/share/nftables.d/chain-post/mangle_postrouting/
 # 写入 TTL 伪装规则（文件内容只需写规则本身，无需 table/chain 声明）
 cat << 'EOF' > /usr/share/nftables.d/chain-post/mangle_postrouting/99-set-ttl.nft
