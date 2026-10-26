@@ -107,8 +107,8 @@ chmod 0755 "$CLASH_CORE_DIR/clash_meta"
 echo "Clash Meta 内核 v${META_VER} 已放入: $(pwd)/$CLASH_CORE_DIR/clash_meta"
 
 
-cat >> .config <<'EOF'
-
+STABLE_VER=$(git describe --tags --always 2>/dev/null | sed 's/^v//; s/-[0-9].*//')
+cat >> .config <<EOF
 # ===== 目标平台（必须在最前）=====
 CONFIG_MODULES=y
 CONFIG_HAVE_DOT_CONFIG=y
@@ -187,6 +187,10 @@ CONFIG_PACKAGE_kmod-rkp-ipid=y
 
 # ===== UA-Mask =====
 CONFIG_PACKAGE_UAmask=y
+
+# ===== SQM智能队列管理 =====
+PACKAGE_luci-app-sqm=y
+PACKAGE_sqm-scripts
 
 # ===== bitsrunlogin-go =====
 CONFIG_PACKAGE_bitsrunlogin-go=y
