@@ -205,12 +205,8 @@ fw4 reload
 
 #修改软件源确保能够正常加包
 cp /etc/apk/repositories.d/distfeeds.list /etc/apk/repositories.d/distfeeds.list.bak
-# 先统一替换为中科大源（确保基础可用）
-sed -i 's|https://downloads.immortalwrt.org|https://mirrors.ustc.edu.cn/immortalwrt|g' /etc/apk/repositories.d/distfeeds.list
-# 将部分 feed 替换为清华源，实现镜像分流
-#    这里把 luci 和 packages 两个 feed 切到清华，base 和 targets 保留中科大
-sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|g' /etc/apk/repositories.d/distfeeds.list
-sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|g' /etc/apk/repositories.d/distfeeds.list
+# 统一替换为中科大源
+sed -i 's|downloads.openwrt.org|mirrors.ustc.edu.cn/openwrt|g' /etc/apk/repositories.d/distfeeds.list
 # 查看修改后的源列表，确认替换正确
 cat /etc/apk/repositories.d/distfeeds.list
 # 刷新软件源索引
