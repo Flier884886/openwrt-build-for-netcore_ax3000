@@ -173,27 +173,13 @@ uci set samba4.@samba[0].WORKGROUP='WORKGROUP'
 uci commit samba4
 /etc/init.d/samba4 restart 2>/dev/null || service samba4 restart 2>/dev/null
 
-# 修改MAC
+# 修改MAC,网络服务重启在最后，避免ssh断连
 uci set network.wan.macaddr='A0:36:BC:1F:4A:8B'
 uci commit network
 uci set wireless.radio1.macaddr='A0:36:BC:8F:2D:4C'
 uci set wireless.radio0.macaddr='D8:5D:4C:7A:3E:91'
 uci commit wireless
 wifi reload
-/etc/init.d/network restart
-
-#修改软件源确保能够正常加包
-cp /etc/apk/repositories.d/distfeeds.list /etc/apk/repositories.d/distfeeds.list.bak
-# 先统一替换为中科大源（确保基础可用）
-sed -i 's|https://downloads.immortalwrt.org|https://mirrors.ustc.edu.cn/immortalwrt|g' /etc/apk/repositories.d/distfeeds.list
-# 将部分 feed 替换为清华源，实现镜像分流
-#    这里把 luci 和 packages 两个 feed 切到清华，base 和 targets 保留中科大
-sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|g' /etc/apk/repositories.d/distfeeds.list
-sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|g' /etc/apk/repositories.d/distfeeds.list
-# 查看修改后的源列表，确认替换正确
-cat /etc/apk/repositories.d/distfeeds.list
-# 刷新软件源索引
-apk update
 
 # 保护内网设备的信息与安全
 mkdir -p /usr/share/nftables.d/chain-pre/forward/
@@ -217,4 +203,18 @@ EOF
 # 3. 重载防火墙
 fw4 reload
 
+#修改软件源确保能够正常加包
+cp /etc/apk/repositories.d/distfeeds.list /etc/apk/repositories.d/distfeeds.list.bak
+# 先统一替换为中科大源（确保基础可用）
+sed -i 's|https://downloads.immortalwrt.org|https://mirrors.ustc.edu.cn/immortalwrt|g' /etc/apk/repositories.d/distfeeds.list
+# 将部分 feed 替换为清华源，实现镜像分流
+#    这里把 luci 和 packages 两个 feed 切到清华，base 和 targets 保留中科大
+sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/luci|g' /etc/apk/repositories.d/distfeeds.list
+sed -i 's|https://mirrors.ustc.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/25.12-SNAPSHOT/packages/aarch64_cortex-a53/packages|g' /etc/apk/repositories.d/distfeeds.list
+# 查看修改后的源列表，确认替换正确
+cat /etc/apk/repositories.d/distfeeds.list
+# 刷新软件源索引
+apk update
+
 echo "务必要前往管理界面的 系统>系统>通用设置 同步时间！！！"
+/etc/init.d/network restart
