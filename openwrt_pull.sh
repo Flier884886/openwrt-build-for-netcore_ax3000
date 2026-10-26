@@ -190,7 +190,7 @@ CONFIG_PACKAGE_UAmask=y
 
 # ===== SQM智能队列管理 =====
 PACKAGE_luci-app-sqm=y
-PACKAGE_sqm-scripts
+PACKAGE_sqm-scripts=y
 
 # ===== bitsrunlogin-go =====
 CONFIG_PACKAGE_bitsrunlogin-go=y
