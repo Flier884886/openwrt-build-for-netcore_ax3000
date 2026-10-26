@@ -54,28 +54,8 @@ git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/luci/UA-Mask
 #   UAMASK_SOURCE_DIR=/run/media/masterchen/openwrt_build/openwrt/package/luci/UA-Mask \
 #   2>&1 | tee uamask_build.log
 sed -i 's|^UAMASK_SOURCE_DIR:=.*|UAMASK_SOURCE_DIR:=$(TOPDIR)/package/luci/UA-Mask|' package/luci/UA-Mask/openwrt/package/Makefile
-echo "克隆 bitsrunlogin-go"
-git clone --depth 1 --filter=blob:none --sparse https://github.com/immortalwrt/packages.git temp-packages00/packages
-cd temp-packages00/packages
-git sparse-checkout set net/bitsrunlogin-go
-cd ../..
-echo "克隆 luci-app-bitsrunlogin-go"
-git clone --depth 1 --filter=blob:none --sparse https://github.com/immortalwrt/luci.git temp-packages00/luci
-cd temp-packages00/luci
-git sparse-checkout set applications/luci-app-bitsrunlogin-go
-cd ../..
-# 直接复制到 package/ 下(平级存放)
-echo "复制包到 package/"
-cp -r temp-packages00/packages/net/bitsrunlogin-go package/
-cp -r temp-packages00/luci/applications/luci-app-bitsrunlogin-go package/
-echo "清理临时目录 temp-packages00"
-rm -rf temp-packages00
-# 修补依赖路径错误
-cp package/luci-app-bitsrunlogin-go/Makefile package/luci-app-bitsrunlogin-go/Makefile.bak
-sed -i 's|^include[[:space:]]\+\.\./\.\./luci\.mk|include $(TOPDIR)/feeds/luci/luci.mk|' package/luci-app-bitsrunlogin-go/Makefile
-sed -i 's|^include[[:space:]]\+\.\./\.\./lang/golang/golang-package\.mk|include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|' package/bitsrunlogin-go/Makefile
-# 清tmp让修改生效
-rm -rf tmp
+echo "克隆smart-srun深澜自动登录器"
+git clone https://github.com/matthewlu070111/smart-srun.git package/smart-srun
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
@@ -192,9 +172,8 @@ CONFIG_PACKAGE_UAmask=y
 CONFIG_PACKAGE_luci-app-sqm=y
 CONFIG_PACKAGE_sqm-scripts=y
 
-# ===== bitsrunlogin-go =====
-CONFIG_PACKAGE_bitsrunlogin-go=y
-CONFIG_PACKAGE_luci-app-bitsrunlogin-go=y
+# ===== smart-srun =====
+PACKAGE_luci-app-smart-srun-bundle=y
 
 # ===== dns-proxy =====
 CONFIG_PACKAGE_https-dns-proxy=y
