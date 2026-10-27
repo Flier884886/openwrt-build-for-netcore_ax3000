@@ -27,9 +27,15 @@ User-Agent标识修改为：Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi
 # Put your custom commands here that should be executed once
 # the system init finished. By default this file does nothing.
 
+# IPID 伪装全局标记（排除局域网和 DHCP）
 nft add table ip ipid_change
 nft add chain ip ipid_change postrouting { type filter hook postrouting priority 0\; policy accept\; }
+# 1. 排除内网互访
 nft add rule ip ipid_change postrouting ip daddr 192.168.1.0/24 return
+# 2. 排除 DHCP 客户端请求和回复（极其关键）
+nft add rule ip ipid_change postrouting udp sport 68 udp dport 67 return
+nft add rule ip ipid_change postrouting udp sport 67 udp dport 68 return
+# 3. 剩下的才打标
 nft add rule ip ipid_change postrouting meta mark set meta mark or 0x10
 
 exit 0
