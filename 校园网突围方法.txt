@@ -214,6 +214,8 @@ wifi reload
 cat << 'EOF' > /usr/share/nftables.d/chain-pre/forward/99-block-leak.nft
 # 内网互通优先放行（Samba、文件共享、发现协议在 LAN 内正常走）
 iifname "br-lan" oifname "br-lan" accept
+# 允许路由器本机向 LAN 发送的组播通知（SSDP/NetBIOS）通过
+ip saddr 192.168.1.1 oifname "br-lan" accept
 # 封杀试图离开 LAN 的 IPv4 组播（SSDP/LLMNR 等发现协议不会泄露到 WAN）
 iifname "br-lan" oifname != "br-lan" ip daddr 224.0.0.0/4 drop
 # 封杀试图离开 LAN 的 IPv4 广播（255.255.255.255 和子网广播）
