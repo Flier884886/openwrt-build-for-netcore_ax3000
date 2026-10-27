@@ -119,6 +119,8 @@ CONFIG_PACKAGE_luci-app-mwan3=y
 CONFIG_PACKAGE_luci-app-pbr=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-wol=y
+CONFIG_PACKAGE_shadow-useradd=y
+CONFIG_PACKAGE_acl=y
 
 # ===== USB 基础与存储 =====
 CONFIG_PACKAGE_kmod-usb-core=y
