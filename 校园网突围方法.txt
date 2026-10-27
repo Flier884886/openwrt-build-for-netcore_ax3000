@@ -157,14 +157,40 @@ uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5057'
 uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5058'
 uci set dhcp.@dnsmasq[0].noresolv='1'
 uci commit dhcp
+/etc/init.d/dnsmasq restart 
 
-/etc/init.d/dnsmasq restart #全局53端口劫持
+
+#全局53端口劫持
+echo "=== 配置 dnsmasq：上游指向 6 个 DoH 实例，并禁止使用外部 DNS ==="
+uci -q delete dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5053'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5054'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5055'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5056'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5057'
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5058'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci commit dhcp
+echo "=== 写入自定义 nftables 防火墙重定向规则 ==="
+# 创建自定义规则目录（如果不存在）
 mkdir -p /usr/share/nftables.d/chain-pre/dstnat/
+# 写入规则：排除 lo 回环接口，强制拦截 br-lan 进入的 53 端口明文请求
 cat << 'EOF' > /usr/share/nftables.d/chain-pre/dstnat/00-force-dns.nft
-iifname "br-lan" udp dport 53 counter redirect to :53
-iifname "br-lan" tcp dport 53 counter redirect to :53
+iifname != "lo" iifname "br-lan" udp dport 53 counter redirect to :53
+iifname != "lo" iifname "br-lan" tcp dport 53 counter redirect to :53
 EOF
+echo "=== 强行关闭 Flow Offloading（必须，否则规则被绕过） ==="
+uci set firewall.@defaults[0].flow_offloading='0'
+uci set firewall.@defaults[0].flow_offloading_hw='0'
+uci commit firewall
+echo "=== 重启服务并加载防火墙规则 ==="
+/etc/init.d/dnsmasq restart
 fw4 reload
+echo "=== 配置完成 ==="
+echo "请执行以下命令检查规则是否生效："
+echo "nft list chain inet fw4 dstnat_lan | grep -A 3 '53'"
+
+
 # 修改主机名
 uci set system.@system[0].hostname='MasterChen'
 uci commit system
