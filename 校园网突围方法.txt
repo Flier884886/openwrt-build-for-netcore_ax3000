@@ -190,7 +190,6 @@ echo "=== 配置完成 ==="
 echo "请执行以下命令检查规则是否生效："
 echo "nft list chain inet fw4 dstnat_lan | grep -A 3 '53'"
 
-
 # 修改主机名
 uci set system.@system[0].hostname='MasterChen'
 uci commit system
@@ -212,25 +211,33 @@ uci commit wireless
 wifi reload
 
 # 保护内网设备的信息与安全
-mkdir -p /usr/share/nftables.d/chain-pre/forward/
-cat << 'EOF' > /usr/share/nftables.d/chain-pre/forward/99-block-lan-discovery-leak.nft
-# 1. 内网互通全放行
+cat << 'EOF' > /usr/share/nftables.d/chain-pre/forward/99-block-leak.nft
+# 内网互通优先放行（Samba、文件共享、发现协议在 LAN 内正常走）
 iifname "br-lan" oifname "br-lan" accept
-# 2. 封杀试图离开内网的 IPv4 组播包
-iifname "br-lan" ip daddr 224.0.0.0/4 drop
-# 3. 封杀试图离开内网的 IPv4 广播包
-iifname "br-lan" ip daddr 255.255.255.255 drop
-iifname "br-lan" ip daddr != 192.168.1.0/24 meta pkttype broadcast drop
-# 4. 封杀试图离开内网的 IPv6 链路本地组播包
-iifname "br-lan" ip6 daddr ff02::/16 drop
-# 5. 封杀试图离开内网的 NetBIOS (TCP/UDP 137-139)
-iifname "br-lan" oifname != "br-lan" udp dport { 137, 138, 139 } drop
-iifname "br-lan" oifname != "br-lan" tcp dport { 137, 138, 139 } drop
-# 6. 封杀试图去外网探测的单播 UPnP
+# 封杀试图离开 LAN 的 IPv4 组播（SSDP/LLMNR 等发现协议不会泄露到 WAN）
+iifname "br-lan" oifname != "br-lan" ip daddr 224.0.0.0/4 drop
+# 封杀试图离开 LAN 的 IPv4 广播（255.255.255.255 和子网广播）
+iifname "br-lan" oifname != "br-lan" ip daddr 255.255.255.255 drop
+iifname "br-lan" oifname != "br-lan" ip daddr 192.168.1.255 drop
+# 封杀试图离开 LAN 的 IPv6 链路本地组播
+iifname "br-lan" oifname != "br-lan" ip6 daddr ff02::/16 drop
+# 封杀 NetBIOS/UPnP 泄漏到 LAN 以外（但 LAN 内已由第一条 accept 放行）
+iifname "br-lan" oifname != "br-lan" udp dport { 137, 138 } drop
+iifname "br-lan" oifname != "br-lan" tcp dport 139 drop
 iifname "br-lan" oifname != "br-lan" udp dport 1900 drop
 iifname "br-lan" oifname != "br-lan" tcp dport 2869 drop
 EOF
-# 3. 重载防火墙
+echo "=== 放行 Samba 入站（路由器对外提供 Samba 服务） ==="
+# 允许 LAN 侧访问路由器的 Samba（137-139, 445）
+uci -q delete firewall.samba_lan
+uci set firewall.samba_lan="rule"
+uci set firewall.samba_lan.name="Allow-Samba-LAN"
+uci set firewall.samba_lan.src="lan"
+uci set firewall.samba_lan.proto="tcp udp"
+uci set firewall.samba_lan.dest_port="137-139 445"
+uci set firewall.samba_lan.target="ACCEPT"
+uci commit firewall
+echo "=== 重载防火墙 ==="
 fw4 reload
 
 #修改软件源确保能够正常加包
