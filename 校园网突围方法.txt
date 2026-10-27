@@ -143,8 +143,28 @@ uci add https-dns-proxy https-dns-proxy
 uci set https-dns-proxy.@https-dns-proxy[-1].resolver_url='https://cloudflare-dns.com/dns-query'
 uci set https-dns-proxy.@https-dns-proxy[-1].bootstrap_dns='1.1.1.1,1.0.0.1'
 uci set https-dns-proxy.@https-dns-proxy[-1].listen_port='5058'
-
 uci commit https-dns-proxy
+
+cp /etc/hosts /etc/hosts.bak
+# 2. 将 6 个 DoH 服务器的域名和对应的 IP 写入 hosts
+cat << 'EOF' >> /etc/hosts
+127.0.0.1 localhost
+
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+# --- DoH Bootstrap Overrides ---
+223.5.5.5 dns.alidns.com
+119.29.29.29 doh.pub
+119.29.29.29 sm2.doh.pub
+101.226.4.6 doh.360.cn
+9.9.9.9 dns.quad9.net
+1.1.1.1 cloudflare-dns.com
+EOF
+
+# 3. 重启 dnsmasq 和 https-dns-proxy
+/etc/init.d/dnsmasq restart
 /etc/init.d/https-dns-proxy restart
 
 echo "=== 3. 固定 dnsmasq 上游至这 6 个加密端口 ==="
