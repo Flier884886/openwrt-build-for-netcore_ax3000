@@ -56,6 +56,8 @@ git clone --depth=1 https://github.com/Zesuy/UA-Mask.git package/luci/UA-Mask
 sed -i 's|^UAMASK_SOURCE_DIR:=.*|UAMASK_SOURCE_DIR:=$(TOPDIR)/package/luci/UA-Mask|' package/luci/UA-Mask/openwrt/package/Makefile
 echo "克隆smart-srun深澜自动登录器"
 git clone https://github.com/matthewlu070111/smart-srun.git package/smart-srun
+echo "克隆文件管理"
+git clone https://github.com/destan19/luci-app-harbor-file.git package/luci-app-harbor-file
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
@@ -186,6 +188,7 @@ CONFIG_PACKAGE_kmod-nft-compat=y
 
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_luci-theme-argon=y
+CONFIG_PACKAGE_luci-app-harbor-file=y
 CONFIG_LUCI_LANG_zh_Hans=y
 CONFIG_LUCI_LANG_zh_Hant=y
 EOF
