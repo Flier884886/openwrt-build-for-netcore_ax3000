@@ -161,16 +161,6 @@ uci commit dhcp
 
 
 #全局53端口劫持
-echo "=== 配置 dnsmasq：上游指向 6 个 DoH 实例，并禁止使用外部 DNS ==="
-uci -q delete dhcp.@dnsmasq[0].server
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5053'
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5054'
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5055'
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5056'
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5057'
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5058'
-uci set dhcp.@dnsmasq[0].noresolv='1'
-uci commit dhcp
 echo "=== 写入自定义 nftables 防火墙重定向规则 ==="
 # 创建自定义规则目录（如果不存在）
 mkdir -p /usr/share/nftables.d/chain-pre/dstnat/
