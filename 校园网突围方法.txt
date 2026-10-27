@@ -172,7 +172,6 @@ uci commit system
 /etc/init.d/system reload
 uci set network.wan.hostname='MasterChen'
 uci commit network
-/etc/init.d/network restart
 uci set samba4.@samba[0].NAME='MasterChen'
 uci set samba4.@samba[0].DESCRIPTION='Windows File Sharing'
 uci set samba4.@samba[0].WORKGROUP='WORKGROUP'
