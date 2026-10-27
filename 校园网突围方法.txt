@@ -167,7 +167,6 @@ EOF
 fw4 reload
 # 修改主机名
 uci set system.@system[0].hostname='MasterChen'
-uci set network.wan.sendopts='0x3c:MSFT 5.0'
 uci commit system
 /etc/init.d/system reload
 uci set network.wan.hostname='MasterChen'
