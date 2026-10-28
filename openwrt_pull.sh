@@ -188,6 +188,7 @@ CONFIG_PACKAGE_iptables-nft=y
 CONFIG_PACKAGE_kmod-ipt-core=y
 CONFIG_PACKAGE_kmod-nft-compat=y
 
+PACKAGE_kmod-wireguard=y
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_luci-theme-argon=y
 CONFIG_PACKAGE_luci-app-harbor-file=y
