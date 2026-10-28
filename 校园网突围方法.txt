@@ -243,6 +243,12 @@ iifname "br-lan" oifname != "br-lan" udp dport { 137, 138 } drop
 iifname "br-lan" oifname != "br-lan" tcp dport 139 drop
 iifname "br-lan" oifname != "br-lan" udp dport 1900 drop
 iifname "br-lan" oifname != "br-lan" tcp dport 2869 drop
+# 入站方向：从非 LAN 进入 LAN 的 IPv4 组播
+iifname != "br-lan" oifname "br-lan" ip daddr 224.0.0.0/4 drop
+# 入站方向：从非 LAN 进入 LAN 的 IPv4 广播
+iifname != "br-lan" oifname "br-lan" ip daddr 255.255.255.255 drop
+# 入站方向：从非 LAN 进入 LAN 的 IPv6 链路本地组播
+iifname != "br-lan" oifname "br-lan" ip6 daddr ff02::/16 drop
 EOF
 echo "=== 放行 Samba 入站（路由器对外提供 Samba 服务） ==="
 # 允许 LAN 侧访问路由器的 Samba（137-139, 445）
