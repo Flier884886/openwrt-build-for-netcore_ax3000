@@ -224,7 +224,7 @@ uci set wireless.radio1.macaddr='A0:36:BC:8F:2D:4C'
 uci set wireless.radio0.macaddr='D8:5D:4C:7A:3E:91'
 uci commit wireless
 wifi reload
-
+mkdir -p /usr/share/nftables.d/chain-pre/forward/
 # 保护内网设备的信息与安全
 cat << 'EOF' > /usr/share/nftables.d/chain-pre/forward/99-block-leak.nft
 # 内网互通优先放行（Samba、文件共享、发现协议在 LAN 内正常走）
