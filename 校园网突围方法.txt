@@ -38,6 +38,11 @@ nft add rule ip ipid_change postrouting udp sport 67 udp dport 68 return
 # 3. 剩下的才打标
 nft add rule ip ipid_change postrouting meta mark set meta mark or 0x10
 
+# 切断校园网 STP 往来
+ebtables -A FORWARD -i eth1 -d 01:80:c2:00:00:00 -j DROP
+ebtables -A FORWARD -o eth1 -d 01:80:c2:00:00:00 -j DROP
+ebtables -A FORWARD -i phy1-sta0 -d 01:80:c2:00:00:00 -j DROP
+ebtables -A FORWARD -o phy1-sta0 -d 01:80:c2:00:00:00 -j DROP
 exit 0
 
 
