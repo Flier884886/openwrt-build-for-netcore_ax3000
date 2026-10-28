@@ -188,6 +188,15 @@ CONFIG_PACKAGE_iptables-nft=y
 CONFIG_PACKAGE_kmod-ipt-core=y
 CONFIG_PACKAGE_kmod-nft-compat=y
 
+# ===== ebtables =====
+PACKAGE_kmod-ebtables=y
+PACKAGE_kmod-ebtables-ipv4=y
+PACKAGE_kmod-ebtables-ipv6=y
+PACKAGE_kmod-ebtables-watchers=y
+PACKAGE_kmod-nft-bridge=y
+PACKAGE_ebtables-legacy=y
+PACKAGE_ebtables-legacy-utils=y
+
 PACKAGE_kmod-wireguard=y
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_luci-theme-argon=y
