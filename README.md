@@ -333,56 +333,6 @@ exit 0
   > 屎山代码请见谅，关键是能跑，实测能用。
 
   ```bash
-  注意：
-  此方法仅在我编译或使用我脚本布置环境而编译的固件中可用。
-  分为三个步骤：设置UA-MASK、添加启动脚本、连接并运行ssh命令。ssh连接工具可使用Tabby。
-  本方法实现了：
-  1.TTL强制设置为128
-  2.UA强制修改为Chrome浏览器
-  3.伪装ipid为递增
-  4.强制重定向NTP服务器到路由器
-  5.劫持DNS到路由器减少特征泄露，并对外加密DNS查询
-  
-  ⚙️浏览器网页设置中：
-  
-  服务>UA MASK>
-  
-  常规设置>
-  User-Agent标识修改为：Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36
-  匹配规则：修改所有流量（强制）
-  
-  网络与防火墙>
-  绕过目标IP：192.168.1.0/24
-  
-  保存并应用
-  
-  
-  ⚙️系统>启动项>启动脚本添加：
-  
-  # Put your custom commands here that should be executed once
-  # the system init finished. By default this file does nothing.
-  
-  # IPID 伪装全局标记（排除局域网和 DHCP）
-  nft add table ip ipid_change
-  nft add chain ip ipid_change postrouting { type filter hook postrouting priority 0\; policy accept\; }
-  # 1. 排除内网互访
-  nft add rule ip ipid_change postrouting ip daddr 192.168.1.0/24 return
-  # 2. 排除 DHCP 客户端请求和回复（极其关键）
-  nft add rule ip ipid_change postrouting udp sport 68 udp dport 67 return
-  nft add rule ip ipid_change postrouting udp sport 67 udp dport 68 return
-  # 3. 剩下的才打标
-  nft add rule ip ipid_change postrouting meta mark set meta mark or 0x10
-  
-  # 切断校园网 STP 往来
-  ebtables -A FORWARD -i eth1 -d 01:80:c2:00:00:00 -j DROP
-  ebtables -A FORWARD -o eth1 -d 01:80:c2:00:00:00 -j DROP
-  ebtables -A FORWARD -i phy1-sta0 -d 01:80:c2:00:00:00 -j DROP
-  ebtables -A FORWARD -o phy1-sta0 -d 01:80:c2:00:00:00 -j DROP
-  exit 0
-  
-  
-  ⚙️首次启动后ssh运行：
-  
   # 备份网络和无线配置
   cp /etc/config/network /etc/config/network.bak_mac
   cp /etc/config/wireless /etc/config/wireless.bak_mac
