@@ -152,8 +152,13 @@ CONFIG_PACKAGE_kmod-fs-isofs=y
 CONFIG_PACKAGE_kmod-loop=y
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
+
+# ===== 文件系统加密支持 =====
 CONFIG_PACKAGE_kmod-crypto-user=y
 CONFIG_PACKAGE_kmod-dm=y
+CONFIG_PACKAGE_cryptsetup=y
+CONFIG_PACKAGE_kmod-crypto-xts=y
+CONFIG_PACKAGE_kmod-crypto-ecb=y
 
 # ===== Web 管理界面核心 =====
 CONFIG_PACKAGE_uhttpd=y
