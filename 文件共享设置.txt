@@ -1,0 +1,25 @@
+# -M 表示不创建home目录，-s /bin/false 表示禁止该用户登录系统终端，仅用于 Samba 访问。
+# 提示 Creating mailbox file: No such file or directory 只是一个警告，并不是致命错误。这是因为你的系统里没有 /var/mail 或 /var/spool/mail 目录。由于我们使用了 -M（不创建家目录）并且该用户只用于 Samba 共享（不需要接收系统邮件），所以完全可以忽略这个警告。
+useradd -M -s /bin/false masterchen08
+# 设置密码
+smbpasswd -a masterchen08
+# 验证用户是否创建成功
+grep masterchen08 /etc/passwd
+# 临时启用acl挂载(自动挂载则需要设置挂载选项为defaults,acl)
+mount -o remount,acl /mnt/usb/sda1
+# 递归赋予读写权
+chmod -R 0777 /mnt/usb/
+# 设置默认 ACL 实现继承
+setfacl -R -m u:masterchen08:rwx /mnt/usb/
+setfacl -R -d -m u:masterchen08:rwx /mnt/usb/
+
+# 用户组管理权限
+# 创建组
+groupadd sambashare
+# 将用户加入组
+usermod -aG sambashare shareA
+usermod -aG sambashare userB
+# 给组设置 ACL（含继承）
+setfacl -R -m g:sambashare:rwx /mnt/usb/sta1/share
+setfacl -R -d -m g:sambashare:rwx /mnt/usb/sta1/share
+
