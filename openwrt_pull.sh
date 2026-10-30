@@ -152,6 +152,8 @@ CONFIG_PACKAGE_kmod-fs-isofs=y
 CONFIG_PACKAGE_kmod-loop=y
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
+CONFIG_PACKAGE_kmod-crypto-user=y
+CONFIG_PACKAGE_kmod-dm=y
 
 # ===== Web 管理界面核心 =====
 CONFIG_PACKAGE_uhttpd=y
