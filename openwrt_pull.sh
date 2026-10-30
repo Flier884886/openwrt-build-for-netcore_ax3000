@@ -204,7 +204,11 @@ PACKAGE_kmod-nft-bridge=y
 PACKAGE_ebtables-legacy=y
 PACKAGE_ebtables-legacy-utils=y
 
-PACKAGE_kmod-wireguard=y
+# ===== tcp直接连接支持 =====
+CONFIG_PACKAGE_socat=y
+CONFIG_SOCAT_SSL=y
+
+CONFIG_PACKAGE_kmod-wireguard=y
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_luci-theme-argon=y
 CONFIG_PACKAGE_luci-app-harbor-file=y
