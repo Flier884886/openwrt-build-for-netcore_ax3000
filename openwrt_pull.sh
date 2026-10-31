@@ -208,7 +208,11 @@ PACKAGE_ebtables-legacy-utils=y
 CONFIG_PACKAGE_socat=y
 CONFIG_SOCAT_SSL=y
 
+# ===== wireguard VPN服务器 =====
+CONFIG_PACKAGE_wireguard-tools=y
 CONFIG_PACKAGE_kmod-wireguard=y
+CONFIG_PACKAGE_luci-proto-wireguard=y
+
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_luci-theme-argon=y
 CONFIG_PACKAGE_luci-app-harbor-file=y
