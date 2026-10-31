@@ -174,13 +174,11 @@ uci set wireless.radio1.macaddr='A0:36:BC:8F:2D:4C'
 uci set wireless.radio0.macaddr='D8:5D:4C:7A:3E:91'
 uci commit wireless
 wifi reload
-mkdir -p /usr/share/nftables.d/chain-pre/forward/
   # 保护内网设备的信息与安全（拦截离开指定接口集合的组播广播）
 mkdir -p /usr/share/nftables.d/table-pre/ /usr/share/nftables.d/chain-pre/forward/
 cat << 'EOF' > /usr/share/nftables.d/table-pre/00-lan-ifs-set.nft
 set lan_ifs {
     type ifname
-    flags constant
     elements = { "br-lan", "VPN", "wireguard-VPN" }
 }
 EOF
