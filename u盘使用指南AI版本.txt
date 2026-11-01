@@ -1,0 +1,217 @@
+LUKS 加密 U 盘 + Samba 共享 + ACL 权限完整命令指南
+适用：OpenWrt 路由器，U 盘数据分区 /dev/sda1
+============================================================
+------------------------------------------------------------
+一、LUKS 加密与自动解密挂载
+------------------------------------------------------------
+安装工具（OpenWrt 24.10+ 用 apk，旧版用 opkg）
+apk update
+apk add cryptsetup block-mount kmod-fs-ext4 e2fsprogs lsblk blkid
+
+旧版：opkg update && opkg install cryptsetup block-mount kmod-fs-ext4 e2fsprogs lsblk blkid
+确认设备并卸载
+lsblk
+blkid /dev/sda1
+umount /dev/sda1
+
+LUKS 加密（确认时输入大写 YES，然后设置主密码）
+cryptsetup luksFormat /dev/sda1
+
+打开加密卷并格式化为 ext4
+cryptsetup open /dev/sda1 usbdata
+mkfs.ext4 /dev/mapper/usbdata
+
+创建密钥文件并加入 LUKS（luksAddKey 时输入主密码授权）
+dd if=/dev/urandom of=/etc/luks-keyfile bs=1024 count=4
+chmod 400 /etc/luks-keyfile
+cryptsetup luksAddKey /dev/sda1 /etc/luks-keyfile
+
+验证两个密钥槽（0=密码，1=密钥文件）
+cryptsetup luksDump /dev/sda1
+
+获取 UUID
+blkid /dev/sda1
+
+写入 /etc/crypttab（替换 UUID 为实际值）
+cat > /etc/crypttab << 'EOF'
+usbdata UUID=你的UUID /etc/luks-keyfile luks
+EOF
+
+创建挂载点并写入 /etc/fstab（带 acl、nofail）
+mkdir -p /mnt/usb/usbdata1
+cat >> /etc/fstab << 'EOF'
+/dev/mapper/usbdata /mnt/usb/usbdata1 ext4 defaults,nofail,acl 0 2
+EOF
+
+写入 /etc/rc.local 实现开机自动解密挂载
+cat > /etc/rc.local << 'EOF'
+
+开机自动解密并挂载 usbdata
+if [ ! -e /dev/mapper/usbdata ]; then
+cryptsetup open --key-file /etc/luks-keyfile /dev/sda1 usbdata
+fi
+if [ -e /dev/mapper/usbdata ]; then
+mount -o acl /dev/mapper/usbdata /mnt/usb/usbdata1
+fi
+exit 0
+EOF
+chmod +x /etc/rc.local
+
+测试：关闭映射后重新执行 rc.local
+umount /mnt/usb/usbdata1 2>/dev/null
+cryptsetup close usbdata 2>/dev/null
+/etc/rc.local
+mount | grep usbdata
+df -h /mnt/usb/usbdata1
+
+备份密钥与 LUKS 头部到电脑（重要）
+base64 /etc/luks-keyfile
+cryptsetup luksHeaderBackup /dev/sda1 --header-backup-file /etc/luks-header.img
+base64 /etc/luks-header.img
+
+或临时放 /tmp 用 scp 拉取（/tmp 重启清空，仅中转）
+mkdir -p /tmp/keys1
+cp /etc/luks-keyfile /tmp/keys1/luks-keyfile
+chmod 400 /tmp/keys1/luks-keyfile
+
+电脑上：scp root@路由器IP:/tmp/keys1/luks-keyfile ~/router-luks-keyfile
+刷机后恢复：上传密钥回路由器
+电脑上：scp ~/router-luks-keyfile root@路由器IP:/etc/luks-keyfile
+chmod 400 /etc/luks-keyfile
+cryptsetup open --key-file /etc/luks-keyfile /dev/sda1 usbdata
+mkdir -p /mnt/usb/usbdata1
+mount -o acl /dev/mapper/usbdata /mnt/usb/usbdata1
+
+再按上面重新写入 /etc/rc.local 即可恢复开机自动解密
+------------------------------------------------------------
+二、Samba 用户创建
+------------------------------------------------------------
+-M 不创建 home 目录，-s /bin/false 禁止登录终端，仅用于 Samba
+提示 Creating mailbox file: No such file or directory 只是警告，可忽略
+useradd -M -s /bin/false masterchen08
+
+设置 Samba 密码
+smbpasswd -a masterchen08
+
+验证用户创建成功
+grep masterchen08 /etc/passwd
+
+其他 Samba 用户同理
+useradd -M -s /bin/false share1652
+smbpasswd -a share1652
+useradd -M -s /bin/false shareA
+smbpasswd -a shareA
+useradd -M -s /bin/false userB
+smbpasswd -a userB
+
+------------------------------------------------------------
+三、ACL 挂载与基础权限
+------------------------------------------------------------
+临时启用 acl 挂载（已写入 fstab/rc.local 的则无需重复）
+mount -o remount,acl /mnt/usb/usbdata1
+
+递归赋予基础读写执行权限
+chmod -R 0777 /mnt/usb/usbdata1
+
+给单个用户设置 ACL（含默认继承）
+setfacl -R -m u:masterchen08:rwx /mnt/usb/usbdata1
+setfacl -R -d -m u:masterchen08:rwx /mnt/usb/usbdata1
+
+------------------------------------------------------------
+四、用户组管理
+------------------------------------------------------------
+创建组
+groupadd sambashare
+
+将用户加入组
+usermod -aG sambashare shareA
+usermod -aG sambashare userB
+
+给组设置 ACL（含继承），只作用于 share 子目录
+setfacl -R -m g:sambashare:rwx /mnt/usb/usbdata1/share
+setfacl -R -d -m g:sambashare:rwx /mnt/usb/usbdata1/share
+
+------------------------------------------------------------
+五、share 目录精细化 ACL（仅授权用户，其他无权限）
+------------------------------------------------------------
+撤销 share 根目录上旧的 share1652 ACL
+setfacl -R -x u:share1652 /mnt/usb/usbdata1
+setfacl -R -d -x u:share1652 /mnt/usb/usbdata1
+
+只对 share 子目录授权 share1652（读写 + 默认继承）
+setfacl -R -m u:share1652:rw /mnt/usb/usbdata1/share
+setfacl -R -d -m u:share1652:rw /mnt/usb/usbdata1/share
+
+收紧：未列出的用户/组（root 除外）无任何权限
+setfacl -m g::--- /mnt/usb/usbdata1/share
+setfacl -m o::--- /mnt/usb/usbdata1/share
+setfacl -d -m g::--- /mnt/usb/usbdata1/share
+setfacl -d -m o::--- /mnt/usb/usbdata1/share
+
+如 share 下已有子内容也需收紧，加 -R
+setfacl -R -m g::---,o::--- /mnt/usb/usbdata1/share
+setfacl -R -d -m g::---,o::--- /mnt/usb/usbdata1/share
+
+验证
+getfacl /mnt/usb/usbdata1/share
+
+期望：user:masterchen08:rwx、user:share1652:rw-、group::---、other::---
+default 段同样 group::---、other::---
+------------------------------------------------------------
+六、Samba 配置文件示例（/etc/samba/smb.conf）
+------------------------------------------------------------
+[global]
+workgroup = WORKGROUP
+server string = OpenWrt Samba
+security = user
+map to guest = Bad User
+[share]
+path = /mnt/usb/usbdata1/share
+valid users = masterchen08, share1652, @sambashare
+read only = no
+create mask = 0660
+directory mask = 0770
+inherit acls = yes
+重启 Samba 生效
+/etc/init.d/samba restart
+
+------------------------------------------------------------
+七、验证与维护命令
+------------------------------------------------------------
+查看 LUKS 密钥槽
+cryptsetup luksDump /dev/sda1
+
+手动解密 / 挂载 / 卸载
+cryptsetup open --key-file /etc/luks-keyfile /dev/sda1 usbdata
+mount -o acl /dev/mapper/usbdata /mnt/usb/usbdata1
+umount /mnt/usb/usbdata1
+cryptsetup close usbdata
+
+查看挂载与空间
+mount | grep usbdata
+df -h /mnt/usb/usbdata1
+
+查看某目录 ACL
+getfacl /mnt/usb/usbdata1/share
+
+递归检查 share 下是否还有 group/other 全开项
+getfacl -R /mnt/usb/usbdata1/share | grep -E '^(group|other)::'
+
+测试默认 ACL 继承
+touch /mnt/usb/usbdata1/share/testfile
+getfacl /mnt/usb/usbdata1/share/testfile
+rm /mnt/usb/usbdata1/share/testfile
+
+------------------------------------------------------------
+八、关键注意事项
+------------------------------------------------------------
+1. LUKS 主密码必须保存，是密钥文件失效时唯一后备手段。
+2. 密钥文件与 LUKS 头部必须备份到电脑，头部损坏无备份则数据永久丢失。
+3. /tmp 是 tmpfs，重启清空，密钥仅可临时中转，不可持久存放。
+4. /etc 下密钥随恢复出厂设置清空，电脑备份是唯一恢复手段。
+5. fstab 与 rc.local 的挂载选项须一致（均带 acl）。
+6. mount 不会自动建目录，报 No such file or directory 先 mkdir -p。
+7. luksFormat 确认需大写 YES，小写 yes 会被中止。
+8. luksAddKey 密码输错报 No key available with this passphrase，重试即可。
+9. root 拥有 CAP_DAC_OVERRIDE，ACL 无法限制 root 访问。
+10. ACL 的 mask 是权限上限，条目权限超过 mask 会被截断。
