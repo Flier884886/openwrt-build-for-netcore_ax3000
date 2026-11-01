@@ -6,7 +6,7 @@ smbpasswd -a masterchen08
 # 验证用户是否创建成功
 grep masterchen08 /etc/passwd
 # 临时启用acl挂载(自动挂载则需要设置挂载选项为defaults,acl)
-mount -o remount,acl /mnt/usb/sda1
+mount -o remount,acl /mnt/usb/usbdata1
 # 递归赋予读写权
 chmod -R 0777 /mnt/usb/
 # 设置默认 ACL 实现继承
@@ -20,6 +20,6 @@ groupadd sambashare
 usermod -aG sambashare shareA
 usermod -aG sambashare userB
 # 给组设置 ACL（含继承）
-setfacl -R -m g:sambashare:rwx /mnt/usb/sta1/share
-setfacl -R -d -m g:sambashare:rwx /mnt/usb/sta1/share
+setfacl -R -m g:sambashare:rwx /mnt/usb/usbdata1/share
+setfacl -R -d -m g:sambashare:rwx /mnt/usb/usbdata1/share
 
