@@ -8,10 +8,10 @@ grep masterchen08 /etc/passwd
 # 临时启用acl挂载(自动挂载则需要设置挂载选项为defaults,acl)
 mount -o remount,acl /mnt/usb/usbdata1
 # 递归赋予读写权
-chmod -R 0777 /mnt/usb/
+chmod -R 0777 /mnt/usb/usbdata1
 # 设置默认 ACL 实现继承
-setfacl -R -m u:masterchen08:rwx /mnt/usb/
-setfacl -R -d -m u:masterchen08:rwx /mnt/usb/
+setfacl -R -m u:masterchen08:rwx /mnt/usb/usbdata1
+setfacl -R -d -m u:masterchen08:rwx /mnt/usb/usbdata1
 
 # 用户组管理权限
 # 创建组
