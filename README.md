@@ -9,13 +9,12 @@
 
 ## 📦 仓库内容
 
-| 文件              | 说明                                                                                         |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| `openwrt_pull.sh` | 一键脚本：克隆 OpenWrt 稳定分支、打 DTS 补丁、拉取插件、内置 Clash Meta 内核、生成 `.config` |
-| `build.sh`        | 编译脚本：先单独编译 `llvm-bpf`（省运行内存，否则内存不够用），再全量编译并记录日志          |
-| `README.md`       | 本文件（含文末的校园网突围指南）                                                             |
-
----
+| 文件               | 说明                                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `openwrt_pull.sh`  | 一键脚本：克隆 OpenWrt 稳定分支、打 DTS 补丁、拉取插件、内置 Clash Meta 内核、生成 `.config` |
+| `build.sh`         | 编译脚本：先单独编译 `llvm-bpf`（省运行内存，否则内存不够用），再全量编译并记录日志          |
+| `README.md`        | 本文件（含文末的校园网突围指南）                                                             |
+| `Router_config.sh` | 校园网突围的ssh指令（结合指南使用）                                                          |
 
 ## 🎯 项目定位
 
@@ -126,6 +125,7 @@
 - USB2/3、UAS、SCSI、`kmod-usb-net-*`（asix / ax88179 / rtl8152 / cdc-ether / rndis）
 - `block-mount`、`kmod-fs-autofs4`
 - 文件系统：ext4 / vfat / exfat / ntfs3 / isofs / loop / nls-cp437 / nls-utf8
+- 数据加密：LUKS
 - **配合 DTS 补丁后，USB 供电正常、4 网口全部可用**
 
 ### 网络与系统
@@ -135,6 +135,7 @@
 - **`tcpdump`（已集成进固件，开箱即用）**：可直接在 SSH 中对 WAN/LAN/桥接口抓包，配合 `kmod-nft-*`、`iptables-nft` 兼容层与 bridge 模块分析校园网认证与特征检测流量（电脑端可以使用`WireShark`连接获得更好体验）
 - `openssh-sftp-server`（SFTP服务器，ssh连接时传文件更便捷）
 - `acl`、`shadow-useradd`（用于samba4用户管理）
+- `socat`（TCP直连）
 - 中文语言包（zh_Hans / zh_Hant）
 
 > 脚本中已规避 `weechat` 系列循环依赖。
@@ -332,7 +333,6 @@ exit 0
   >
   > 屎山代码请见谅，关键是能跑，实测能用。
 
- 
 ---
 
 # 四、抗校园网检测维度分析
