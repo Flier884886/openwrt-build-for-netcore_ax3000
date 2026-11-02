@@ -23,3 +23,13 @@ usermod -aG sambashare userB
 setfacl -R -m g:sambashare:rwx /mnt/usb/usbdata1/share
 setfacl -R -d -m g:sambashare:rwx /mnt/usb/usbdata1/share
 
+
+# 给wireguard添加防火墙规则，打开端口允许外网访问
+uci set firewall.wg=rule
+uci set firewall.wg.name="Allow-WireGuard"
+uci set firewall.wg.src="wan"
+uci set firewall.wg.dest_port="51820"
+uci set firewall.wg.proto="udp"
+uci set firewall.wg.target="ACCEPT"
+uci commit firewall
+/etc/init.d/firewall restart
