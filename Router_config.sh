@@ -56,6 +56,7 @@ uci set firewall.@redirect[-1].target='DNAT'
 uci set firewall.@redirect[-1].dest_ip='192.168.1.1'
 uci set firewall.@redirect[-1].dest_port='123'
 uci set firewall.@redirect[-1].family='ipv4'
+uci set firewall.@redirect[-1].dest='lan'
 uci commit firewall
 /etc/init.d/firewall restart
 
